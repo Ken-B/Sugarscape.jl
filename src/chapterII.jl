@@ -191,10 +191,10 @@ function timestep(scape::Scape; α::Int=1)
     nothing
 end
 
-function run(N; kwargs...)# α=1, N_agents=400) 
-    scape = init_scape(init_capacity(); kwargs...)# N_agents=N_agents)
+function run(N; kwargs...)
+    scape = init_scape(init_capacity(); kwargs...)
     for cnt = 1:N
-        timestep(scape; kwargs...)#α=α)
+        timestep(scape; kwargs...)
     end
     scape
 end
@@ -204,7 +204,7 @@ end
 
 plot(scape::Scape) = plot(scape, length(scape.steps))
 
-function plot(scape::Scape)#, step::Int)
+function plot(scape::Scape)
     lattice = scape.lattice
     gridx, gridy = size(lattice)
     sugar = reshape([p.sugar for p in lattice], gridx, gridy)
@@ -212,13 +212,13 @@ function plot(scape::Scape)#, step::Int)
     colmap = PyPlot.ColorMap([Color.RGB(1,1,1), Color.RGB(1,1,0)],5,1.5)
     PyPlot.scatter(s_i, s_j, s=20*sugar, c=sugar, cmap=colmap, marker="o", lw=0)
 
-    step_agents = living(scape)#.steps[step])
+    step_agents = living(scape)
     a_i = [a.place.x for a in step_agents]
     a_j = [a.place.y for a in step_agents]
     PyPlot.scatter(a_i, a_j, c="red", lw=0)
     
     PyPlot.xlim(0, gridx+1); PyPlot.ylim(0, gridy+1)
-    PyPlot.title("Sugarscape step")# $step")
+    PyPlot.title("Sugarscape step")
 end
 
 
