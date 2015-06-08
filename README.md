@@ -1,3 +1,3 @@
 # Sugarscape
 
-[![Build Status](https://travis-ci.org/Ken-B/Sugarscape.jl.svg?branch=master)](https://travis-ci.org/Ken-B/Sugarscape.jl)
+We code some simple Agent Based Models based on the book of Joshua M. Epstein and Robert Axtell, Growing Artificial Societies - Social Science from the Bottom Up (1996).
