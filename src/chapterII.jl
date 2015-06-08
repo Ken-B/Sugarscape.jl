@@ -6,11 +6,13 @@ using StatsBase: sample
 import PyPlot
 import Color
 
-## Types
+
+## Types ##
 
 # We define an abstract type AgentInfo with two subtypes: NoAgent and Agent.
-# This allows for removing an agent from the board while keeping his entry in the agent list.
-# Also it allows for recursive type definition, an old unresolved Julia issue #269.
+# This allows for removing an agent from the board while keeping his entry in 
+# the agent list. Also it allows for recursive type definition, an old 
+# unresolved Julia issue #269.
 
 abstract AgentInfo
 type NoAgent <: AgentInfo
@@ -31,17 +33,12 @@ type Agent <: AgentInfo
     stash::Int
 end
 
-# To keep record of the simulation, we keep all agent steps in memory for now.
-# Alternatively, only the current agent list could be kept and some statistic 
-# computed or all agents with the lattice at each step.
-type AgentList
-    agents::Vector{AgentInfo}
-end
 
+# We only keep in this version the current lattice and agents in memory, not the
+# history.
 type Scape
     lattice::Array{Place}
-    agents::Vector{AgentInfo}
-    steps::Vector{AgentList}
+    agents::Vector{AgentInfo}    
 end
 
 # convenience functions
@@ -49,13 +46,12 @@ Base.show(io::IO, scape::Scape) = println(io, "Sugarscape with $(length(agents(s
 agents(scape::Scape) = scape.agents
 Base.isempty(place::Place) = isa(place.agent, NoAgent)
 alive(agent::AgentInfo) = isa(agent, Agent)
-# also usable for AgentList instances
 living(scape) = scape.agents[map(alive, scape.agents)]
 
 
-## Initialization
+## Initialization ##
 
-# We define sugarscape capacity similar to graphs in the book
+# We define a sugarscape capacity similar to graphs in the book.
 function init_capacity()
     grid = 50
     hump1 = [15, 15]
@@ -64,7 +60,8 @@ function init_capacity()
     capacity = Int[max(0, 4 - ifloor(min(dist([i,j], hump1), dist([i,j], hump2))/5)) for i=1:grid,j=1:grid]
 end
 
-function init_scape(capacity; N_agents=400, init_stash=10)
+# Keyword arguments still have a performance penalty if not type defined.
+function init_scape(capacity; N_agents::Int=400, init_stash=10)
     gridx, gridy = size(capacity)
     # create empty lattice with sugar levels at full capacity
     lattice = [Place(i,j, NoAgent(), capacity[i,j], capacity[i,j]) for i=1:gridx, j=1:gridy]
@@ -81,13 +78,13 @@ function init_scape(capacity; N_agents=400, init_stash=10)
         place.agent = agent
     end
     
-    Scape(lattice, agents, [AgentList(deepcopy(agents))])
+    Scape(lattice, agents)
 end
 
 
-## Movement
+## Movement ##
 
-# (input annotations are not necessary (not even for speed), just for type checks)
+# (function input annotations are not necessary (not even for speed), just for type checks)
 
 #step functions to select neighbouring place with circular boundaries
  left(p::Place, lat::Array{Place}) = lat[p.x==1 ? end : p.x-1, p.y]
@@ -145,12 +142,14 @@ end
 # move all agents and harvest
 function move(scape::Scape)
     lat = scape.lattice
-    
+    direction = [left, right, up, down]
+
     @inbounds for agent in shuffle(living(scape))
-        view_places = Place[]
+        view_places = Array(Place, 4)
         # Randomize search directions in case of equal sugar place, as in book.
-        for wind in shuffle([left, right, up, down])
-            push!(view_places, view_place(agent, wind, lat))
+        shuffle(direction)
+        for i = 1:4
+            view_places[i] = view_place(agent, direction[i], lat))
         end
         select_place = last(sort!(view_places))
         move(agent, select_place)
@@ -159,9 +158,9 @@ function move(scape::Scape)
 end
 
 
-## Evolve
+## Evolve ##
 
-function grow(scape::Scape; α=1)    
+function grow(scape::Scape; α::Int=1)    
     @inbounds for place in scape.lattice
         place.sugar = min(place.capacity, place.sugar + α)
     end
@@ -184,13 +183,11 @@ function Base.kill(scape::Scape)
     end    
 end
 
-function timestep(scape::Scape; α=1)
+function timestep(scape::Scape; α::Int=1)
     grow(scape, α=α)
-    move(scape)#includes harvestig
+    move(scape) #includes harvestig
     consume(scape)
     kill(scape)
-    
-    push!(scape.steps, AgentList(deepcopy(agents(scape))))
     nothing
 end
 
@@ -202,11 +199,12 @@ function run(N; kwargs...)# α=1, N_agents=400)
     scape
 end
 
-## Plotting
+
+## Plotting ##
 
 plot(scape::Scape) = plot(scape, length(scape.steps))
 
-function plot(scape::Scape, step::Int)
+function plot(scape::Scape)#, step::Int)
     lattice = scape.lattice
     gridx, gridy = size(lattice)
     sugar = reshape([p.sugar for p in lattice], gridx, gridy)
@@ -214,13 +212,13 @@ function plot(scape::Scape, step::Int)
     colmap = PyPlot.ColorMap([Color.RGB(1,1,1), Color.RGB(1,1,0)],5,1.5)
     PyPlot.scatter(s_i, s_j, s=20*sugar, c=sugar, cmap=colmap, marker="o", lw=0)
 
-    step_agents = living(scape.steps[step])
+    step_agents = living(scape)#.steps[step])
     a_i = [a.place.x for a in step_agents]
     a_j = [a.place.y for a in step_agents]
     PyPlot.scatter(a_i, a_j, c="red", lw=0)
     
     PyPlot.xlim(0, gridx+1); PyPlot.ylim(0, gridy+1)
-    PyPlot.title("Sugarscape step $step")
+    PyPlot.title("Sugarscape step")# $step")
 end
 
 
