@@ -9,35 +9,28 @@ import Color
 
 ## Types ##
 
-# We define an abstract type AgentInfo with two subtypes: NoAgent and Agent.
-# This allows for removing an agent from the board while keeping his entry in 
-# the agent list. Also it allows for recursive type definition, an old 
-# unresolved Julia issue #269.
-
-abstract AgentInfo
-type NoAgent <: AgentInfo
+immutable Place
+    x::Uint16
+    y::Uint16
+    sugar::Uint8
+    capacity::Uint8
+    empty::Bool
+    agentID::Int
 end
 
-type Place
-    x::Int
-    y::Int
-    agent::AgentInfo
-    sugar::Int
-    capacity::Int
-end
-
-type Agent <: AgentInfo
-    place::Place
-    vision::Int
-    metabolism::Int
+immutable Agent
+    ID::Int
+    vision::Uint8
+    metabolism::Uint8
     stash::Int
+    x::Uint16
+    y::Uint16
 end
-
 
 # We only keep in this version the current lattice and agents in memory, not the
 # history.
 type Scape
-    lattice::Array{Place}
+    lattice::Array{Place, 2}
     agents::Vector{AgentInfo}    
 end
 
@@ -51,17 +44,22 @@ living(scape) = scape.agents[map(alive, scape.agents)]
 
 ## Initialization ##
 
-# We define a sugarscape capacity similar to graphs in the book.
+
 function init_capacity()
+    # similar to graphs in the book.
     grid = 50
     hump1 = [15, 15]
     hump2 = [40, 40]
     dist(xy, hump) = hypot(xy[1]-hump[1], xy[2]-hump[2])
     capacity = Int[max(0, 4 - ifloor(min(dist([i,j], hump1), dist([i,j], hump2))/5)) for i=1:grid,j=1:grid]
+
+    # repeat this matrix
+    times = 70
+    cap = repeat(capacity, outer=[times,times])
 end
 
 # Keyword arguments still have a performance penalty if not type defined.
-function init_scape(capacity; N_agents::Int=400, init_stash=10)
+function init_scape(capacity; N_agents::Int=400*5000)
     gridx, gridy = size(capacity)
     # create empty lattice with sugar levels at full capacity
     lattice = [Place(i,j, NoAgent(), capacity[i,j], capacity[i,j]) for i=1:gridx, j=1:gridy]
@@ -71,7 +69,7 @@ function init_scape(capacity; N_agents::Int=400, init_stash=10)
     for place in sample(lattice, N_agents, replace=false)
         vision = rand(1:6)
         metabolism = rand(1:4)
-        stash = init_stash
+        stash = rand(5:25)
         agent = Agent(place, vision, metabolism, stash)
         push!(agents, agent)
 
