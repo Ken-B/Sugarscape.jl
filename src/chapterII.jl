@@ -149,7 +149,7 @@ function move(scape::Scape)
         # Randomize search directions in case of equal sugar place, as in book.
         shuffle(direction)
         for i = 1:4
-            view_places[i] = view_place(agent, direction[i], lat))
+            view_places[i] = view_place(agent, direction[i], lat)
         end
         select_place = last(sort!(view_places))
         move(agent, select_place)
