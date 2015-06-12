@@ -38,7 +38,8 @@ end
 # history.
 type Scape
     lattice::Array{Place}
-    agents::Vector{AgentInfo}    
+    agents::Vector{AgentInfo}
+    steps::Int
 end
 
 # convenience functions
@@ -78,7 +79,7 @@ function init_scape(capacity; N_agents::Int=400, init_stash=10)
         place.agent = agent
     end
     
-    Scape(lattice, agents)
+    Scape(lattice, agents, 0)
 end
 
 
@@ -188,6 +189,7 @@ function timestep(scape::Scape; α::Int=1)
     move(scape) #includes harvestig
     consume(scape)
     kill(scape)
+    scape.steps += 1
     nothing
 end
 
@@ -201,8 +203,6 @@ end
 
 
 ## Plotting ##
-
-plot(scape::Scape) = plot(scape, length(scape.steps))
 
 function plot(scape::Scape)
     lattice = scape.lattice
@@ -218,9 +218,8 @@ function plot(scape::Scape)
     PyPlot.scatter(a_i, a_j, c="red", lw=0)
     
     PyPlot.xlim(0, gridx+1); PyPlot.ylim(0, gridy+1)
-    PyPlot.title("Sugarscape step")
+    PyPlot.title("Sugarscape step $(scape.steps)")
 end
-
 
 
 end #module
