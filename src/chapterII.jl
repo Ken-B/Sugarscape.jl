@@ -62,7 +62,8 @@ function init_capacity()
 end
 
 # Keyword arguments still have a performance penalty if not type defined.
-function init_scape(capacity; N_agents::Int=400, init_stash=10)
+function init_scape(capacity; N_agents::Int=400, init_stash=10, 
+                    init_vision=()->rand(1:6), init_metabolism=()->rand(1:4))
     gridx, gridy = size(capacity)
     # create empty lattice with sugar levels at full capacity
     lattice = [Place(i,j, NoAgent(), capacity[i,j], capacity[i,j]) for i=1:gridx, j=1:gridy]
@@ -70,8 +71,8 @@ function init_scape(capacity; N_agents::Int=400, init_stash=10)
     #populate with agents
     agents = AgentInfo[]
     for place in sample(lattice, N_agents, replace=false)
-        vision = rand(1:6)
-        metabolism = rand(1:4)
+        vision = init_vision()
+        metabolism = init_metabolism()
         stash = init_stash
         agent = Agent(place, vision, metabolism, stash)
         push!(agents, agent)
@@ -184,7 +185,7 @@ function Base.kill(scape::Scape)
     end    
 end
 
-function timestep(scape::Scape; α::Int=1)
+function timestep(scape::Scape; α::Int=1, args...)
     grow(scape, α=α)
     move(scape) #includes harvestig
     consume(scape)
