@@ -4,7 +4,7 @@ module ChapterII
 
 using StatsBase: sample
 import PyPlot
-import Color
+import Colors
 
 
 ## Types ##
@@ -58,7 +58,7 @@ function init_capacity()
     hump1 = [15, 15]
     hump2 = [40, 40]
     dist(xy, hump) = hypot(xy[1]-hump[1], xy[2]-hump[2])
-    capacity = Int[max(0, 4 - ifloor(min(dist([i,j], hump1), dist([i,j], hump2))/5)) for i=1:grid,j=1:grid]
+    capacity = Int[max(0, 4 - floor(min(dist([i,j], hump1), dist([i,j], hump2))/5)) for i=1:grid,j=1:grid]
 end
 
 # Keyword arguments still have a performance penalty if not type defined.
@@ -210,7 +210,7 @@ function plot(scape::Scape)
     gridx, gridy = size(lattice)
     sugar = reshape([p.sugar for p in lattice], gridx, gridy)
     s_i, s_j = collect(ind2sub(size(lattice), 1:length(lattice)))
-    colmap = PyPlot.ColorMap([Color.RGB(1,1,1), Color.RGB(1,1,0)],5,1.5)
+    colmap = PyPlot.ColorMap([Colors.RGB(1,1,1), Colors.RGB(1,1,0)],5,1.5)
     PyPlot.scatter(s_i, s_j, s=20*sugar, c=sugar, cmap=colmap, marker="o", lw=0)
 
     step_agents = living(scape)
