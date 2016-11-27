@@ -91,7 +91,7 @@ function move(agent::Agent, dest_place::Place)
 end
 
 # function to select best next step in view of agent.
-function view_place(agent::Agent, step_function::Function, lattice)
+function view_place(agent::Agent, step_function::Function, lattice::Matrix{Place{Agent}})
     p = agent.place
 
     p_out = pstep = p #if no unoccupied place in sight, stay put
@@ -132,7 +132,7 @@ function move_harvest(scape::Scape)
     direction = [left, right, up, down]
     view_places = Array(Place, 4)
 
-    for agent in shuffle(scape.agents)
+    @inbounds for agent in shuffle(scape.agents)
         # Randomize search directions in case of equal sugar place, as in book.
         shuffle!(direction)
         for i = 1:4
